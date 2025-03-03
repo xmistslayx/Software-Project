@@ -6,18 +6,14 @@ if (isset($_SESSION['user_id'])) {
     $user_id = $_SESSION['user_id'];
 
     $query = "SELECT * FROM notifications WHERE user_id = ? ORDER BY created_at DESC";
-    
     $stmt = $conn->prepare($query);
-    $stmt->bind_param("i", $user_id);
-    
+    $stmt->bindValue(1, $user_id, PDO::PARAM_INT);
     $stmt->execute();
-    $result = $stmt->get_result();
-    
-    while ($row = $result->fetch_assoc()) {
+    $notifications = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    foreach ($notifications as $row) {
         echo $row['message'] . "<br>";
     }
-    
-    $stmt->close();
 } else {
     echo "User ID is not set.";
 }
@@ -26,31 +22,28 @@ if (isset($_SESSION['user_id'])) {
 $current_user_id = $_SESSION['user_id'];
 
 if ($_SERVER["REQUEST_METHOD"] === "GET" && isset($_GET["fetch"])) {
-    $stmt = $conn->prepare("SELECT * FROM notifications WHERE user_id = ? AND is_read=FALSE ORDER BY created_at DESC");
-    $stmt->bind_param("i", $current_user_id);
+    $stmt = $conn->prepare("SELECT * FROM notifications WHERE user_id = ? AND is_read = 0 ORDER BY created_at DESc");
+    $stmt->bindValue(1, $current_user_id, PDO::PARAM_INT);
     $stmt->execute();
-    $result = $stmt->get_result();
-    $notifications = $result->fetch_all(MYSQLI_ASSOC);
+    $notifications = $stmt->fetchAll(PDO::FETCH_ASSOC);
     echo json_encode($notifications);
     exit();
 }
 
 // Handle marking notifications as read
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["mark_read"])) {
-    $stmt = $conn->prepare("UPDATE notifications SET is_read = TRUE WHERE user_id = ?");
-    $stmt->bind_param("i", $current_user_id);
+    $stmt = $conn->prepare("UPDATE notifications SET is_read = 1 WHERE user_id = ?");
+    $stmt->bindValue(1, $current_user_id, PDO::PARAM_INT);
     $stmt->execute();
     echo json_encode(["status" => "success"]);
     exit();
 }
 
-// Fetch ybead bitfications
-$stmt = $conn->prepare("SELECT * FROM notifications WHERE user_id = ? AND is_read = FALSE ORDER BY created_at DESC");
-$stmt->bind_param("i", $current_user_id);
+// Fetch unread notifications
+$stmt = $conn->prepare("SELECT * FROM notifications WHERE user_id = ? AND is_read = 0 ORDER BY created_at DESC");
+$stmt->bindValue(1, $current_user_id, PDO::PARAM_INT);
 $stmt->execute();
-$result = $stmt->get_result();
-$notifications = $result->fetch_all(MYSQLI_ASSOC);
-$stmt->close();
+$notifications = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
 <div id="notification-container">
@@ -62,8 +55,8 @@ $stmt->close();
     <div id="notif-dropdown" class="dropdown">
         <?php if (count($notifications) > 0): ?>
             <?php foreach ($notifications as $notif): ?>
-                <div class="notif-item <?= $notif['type'] ?>">
-                    <?= $notif["message"] ?>
+                <div class="notif-item <?= htmlspecialchars($notif['type']) ?>">
+                    <?= htmlspecialchars($notif["message"]) ?>
                 </div>
             <?php endforeach; ?>
         <?php else: ?>
