@@ -2,10 +2,10 @@ Login Page
 
 <!doctype HTML>
 <html>
-<a href="admin-dashboard/admin-dashboard.php">
+<a href="admin_dashboard/admin_dashboard.php">
     <button>Admin Dashboard</button>
 </a>
-<a href="guest-dashboard/guest-dashboard.php">
+<a href="guest_dashboard/guest_dashboard.php">
     <button>Guest Dashboard</button>
 </a>
 </html>
