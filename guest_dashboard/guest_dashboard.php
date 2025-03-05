@@ -3,10 +3,10 @@
 <a href="payments_page.php">
     <button>Payments Page</button>
 </a>
-<a href="profile_management.php">
+<a href="manage_profile.php">
     <button>Profile Management</button>
 </a>
-<a href="services_management.php">
+<a href="manage_services.php">
     <button>Services Management</button>
 </a>
 <a href="../index.php">

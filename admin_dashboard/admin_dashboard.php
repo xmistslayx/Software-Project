@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html>
-<a href="room_management.php">
+<a href="manage_rooms.php">
     <button type="button">Rooms Management</button>
 </a>
 <a href="guest_management.php">

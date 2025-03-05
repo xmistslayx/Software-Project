@@ -34,8 +34,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $checkIn = new DateTime($checkInDate);
             $checkOut = new DateTime($checkOutDate);
 
-            $formattedCheckInDate = $checkIn->format('d-m-Y');
-            $formattedCheckOutDate = $checkOut->format('d-m-Y');
+            $formattedCheckInDate = $checkIn->format('Y-m-d');
+            $formattedCheckOutDate = $checkOut->format('Y-m-d');
 
             $nights = $checkIn->diff($checkOut)->days;
 
@@ -81,9 +81,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $feedback = 'Error adding booking.';
                 }
             }
-        }
-
-        elseif ($action === 'edit') {
+        } elseif ($action === 'edit') {
             if (isset($_POST['booking_id']) && isset($_POST['guest_id'])) {
                 $bookingId = $_POST['booking_id'];
                 $roomId = $_POST['room_id'];
@@ -93,9 +91,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 $checkIn = new DateTime($checkInDate);
                 $checkOut = new DateTime($checkOutDate);
-                
-                $formattedCheckInDate = $checkIn->format('d/m/Y');
-                $formattedCheckOutDate = $checkOut->format('d/m/Y');
+
+                $formattedCheckInDate = $checkIn->format('Y-m-d');
+                $formattedCheckOutDate = $checkOut->format('Y-m-d');
 
                 $nights = $checkIn->diff($checkOut)->days;
 
@@ -136,9 +134,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $feedback = 'Error updating booking.';
                 }
             }
-        }
-
-        elseif ($action === 'delete') {
+        } elseif ($action === 'delete') {
             $bookingId = $_POST['booking_id'];
 
             $stmt = $db->prepare("DELETE FROM bookings WHERE booking_id = :bookingId");
@@ -171,8 +167,8 @@ $db->close();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../assets/styles.css">
     <title>Manage Bookings</title>
-    <link rel="stylesheet" href="css/styles.css">
 </head>
 
 <body>
@@ -286,7 +282,7 @@ $db->close();
             </tbody>
         </table>
         <br>
-        <a href="dashboard.php" class="button">Back to Dashboard</a>
+        <a href="admin_dashboard.php" class="button">Back to Dashboard</a>
     </div>
 </body>
 

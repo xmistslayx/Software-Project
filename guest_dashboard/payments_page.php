@@ -45,6 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../assets/styles.css">
     <title>Payment Page</title>
 </head>
 
@@ -68,6 +69,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <button type="submit">Submit Payment</button>
     </form>
+
+    <a href="guest_dashboard.php" class="button">Back to Dashboard</a>
 
     <script src="https://js.stripe.com/v3/"></script>
     <script>
