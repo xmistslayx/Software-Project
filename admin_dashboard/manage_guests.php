@@ -10,31 +10,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['action'])) {
         $action = $_POST['action'];
 
-        //CRUD Logic
-        if ($action === 'add') {
-            $forename = $_POST['forename'];
-            $surname = $_POST['surname'];
-            $email = $_POST['email'];
-            $phone = $_POST['phone'];
-            $emergencyContact = $_POST['emergency_contact'];
-            $address = $_POST['address'];
-            $role = $_POST['role'];
-
-            $stmt = $db->prepare("INSERT INTO users (forename, surname, email, phone, emergency_contact, address, role) VALUES (:forename, :surname, :email, :phone, :emergencyContact, :address, :role)");
-            $stmt->bindValue(':forename', $forename, SQLITE3_TEXT);
-            $stmt->bindValue(':surname', $surname, SQLITE3_TEXT);
-            $stmt->bindValue(':email', $email, SQLITE3_TEXT);
-            $stmt->bindValue(':phone', $phone, SQLITE3_TEXT);
-            $stmt->bindValue(':emergencyContact', $emergencyContact, SQLITE3_TEXT);
-            $stmt->bindValue(':address', $address, SQLITE3_TEXT);
-            $stmt->bindValue(':role', $role, SQLITE3_TEXT);
-
-            if ($stmt->execute()) {
-                $feedback = 'User added successfully!';
-            } else {
-                $feedback = 'Error adding user.';
-            }
-        } elseif ($action === 'edit') {
+        //Editing and Deleting Logic
+        if ($action === 'edit') {
             if (isset($_POST['user_id'], $_POST['forename'], $_POST['surname'], $_POST['email'], $_POST['phone'], $_POST['emergency_contact'], $_POST['address'], $_POST['role'])) {
                 $id = $_POST['user_id'];
                 $forename = $_POST['forename'];
@@ -105,34 +82,6 @@ $db->close();
         <?php if ($feedback): ?>
             <p style="color: green;" class="feedback-message"><?php echo $feedback; ?></p>
         <?php endif; ?>
-
-        <button onclick="toggleAddForm()" class="update-button">Add Guests</button>
-
-        <div id="add-form">
-            <h2>Add New User</h2>
-            <form method="POST" class="add-user-form" action="manage_guests.php">
-                <input type="hidden" name="action" value="add">
-                <label for="forename">Forename:</label>
-                <input type="text" name="forename" required>
-                <label for="surname">Surname:</label>
-                <input type="text" name="surname" required>
-                <label for="email">Email:</label>
-                <input type="email" name="email" required>
-                <label for="phone">Phone:</label>
-                <input type="text" name="phone" required>
-                <label for="emergency_contact">Emergency Contact:</label>
-                <input type="text" name="emergency_contact" required>
-                <label for="address">Address:</label>
-                <input type="text" name="address" required>
-                <label for="role">Role:</label>
-                <select name="role" required>
-                    <option value="guest">Guest</option>
-                    <option value="admin">Admin</option>
-                    <option value="owner">Owner</option>
-                </select>
-                <button type="submit" class="update-button">Add User</button>
-            </form>
-        </div>
 
         <h3>User List</h3>
         <table border="1">

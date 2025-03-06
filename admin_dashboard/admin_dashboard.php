@@ -3,7 +3,7 @@
 <a href="manage_rooms.php">
     <button type="button">Rooms Management</button>
 </a>
-<a href="guest_management.php">
+<a href="manage_guests.php">
     <button type="button">Guest Management</button>
 </a>
 <a href="manage_room_types.php">
