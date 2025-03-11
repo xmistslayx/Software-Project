@@ -1,0 +1,156 @@
+//HTML START//
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notification Page</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h2>Notification Center</h2>
+        <div id="notification" class="notification success">✅ Your booking has been completed.</div>
+        
+        <div class="preferences">
+            <h3>Choose how to receive notifications:</h3>
+            <div class="checkbox-container">
+                <label class="checkbox-box"><input type="checkbox" name="notificationMethod" value="push"><span>Push Notifications</span></label>
+                <label class="checkbox-box"><input type="checkbox" name="notificationMethod" value="sms"><span>SMS Notifications</span></label>
+                <label class="checkbox-box"><input type="checkbox" name="notificationMethod" value="email"><span>Email Notifications</span></label>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
+//HTML FINISH//
+
+
+//CSS START//
+body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    background: linear-gradient(135deg, #ece9e6, #ffffff);
+    margin: 0;
+}
+.container {
+    background: white;
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    width: 400px;
+}
+h2 {
+    margin-bottom: 20px;
+    font-size: 22px;
+    color: #333;
+}
+.notification {
+    padding: 20px;
+    margin-top: 10px;
+    border-radius: 20px;
+    color: white;
+    font-weight: bold;
+    text-align: center;
+    font-size: 16px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease-in-out;
+}
+.success {
+    background-color: #4CAF50;
+}
+.error {
+    background-color: #D32F2F;
+    color: #fff;
+}
+.warning {
+    background-color: #FF8C00;
+    color: #fff;
+}
+.preferences {
+    margin-top: 20px;
+    text-align: center;
+}
+.preferences h3 {
+    font-size: 18px;
+    color: #333;
+    margin-bottom: 10px;
+}
+.checkbox-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+}
+.checkbox-box {
+    background: #f9f9f9;
+    padding: 10px 15px;
+    border-radius: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    width: 250px;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+    padding-left: 20px;
+}
+.checkbox-box input {
+    cursor: pointer;
+    width: 18px;
+    height: 18px;
+}
+.checkbox-box span {
+    cursor: default;
+}
+//CSS END//
+
+//JS START//
+document.addEventListener("DOMContentLoaded", () => {
+    let buttonClicks = {}; // Object to track button clicks
+
+    document.querySelectorAll("input[type='checkbox']").forEach(checkbox => {
+        // Load saved state from localStorage
+        if (localStorage.getItem(checkbox.value) === "true") {
+            checkbox.checked = true;
+        }
+
+        checkbox.addEventListener("change", function() {
+            let option = this.value;
+            if (!buttonClicks[option]) {
+                buttonClicks[option] = 0;
+            }
+            buttonClicks[option]++;
+            console.log(`Option: ${option} clicked ${buttonClicks[option]} times`);
+            
+            // Save state to localStorage
+            localStorage.setItem(option, this.checked);
+        });
+    });
+
+    // Notification handling
+    const updateNotification = (type) => {
+        const notification = document.getElementById("notification");
+        if (!notification) return;
+        
+        notification.className = `notification ${type}`;
+        
+        const messages = {
+            success: "✅ Your booking has been completed.",
+            error: "❌ Your booking has not been made, please double-check your form.",
+            warning: "⚠️ Warning! Something is wrong with your booking, please call us."
+        };
+        
+        notification.innerHTML = messages[type] || "ℹ️ Default Notification Message.";
+    };
+    
+    // Set notification status dynamically from a variable
+    const notificationStatus = "warning"; // Change this to 'success' or 'error' to test
+    updateNotification(notificationStatus);
+});
+//JS END//
