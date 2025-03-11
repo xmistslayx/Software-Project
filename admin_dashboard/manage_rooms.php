@@ -1,71 +1,67 @@
 <?php
 session_start();
 
-$db = new SQLite3(__DIR__ . '/../luckynest.db');
+include __DIR__ . '/../include/db.php';
 
 $feedback = '';
 $roomData = [];
 $roomTypeOptions = [];
 
-$roomTypeResult = $db->query("SELECT room_type_id, room_type_name FROM room_types");
-while ($row = $roomTypeResult->fetchArray(SQLITE3_ASSOC)) {
-    $roomTypeOptions[] = $row;
-}
+$stmt = $conn->query("SELECT room_type_id, room_type_name FROM room_types");
+$roomTypeOptions = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['action'])) {
         $action = $_POST['action'];
 
-        // CRUD Logic
+        // This if elseif elseif is the CRUD Logic
         if ($action === 'add') {
             $roomNumber = $_POST['room_number'];
             $roomTypeId = $_POST['room_type_id'];
             $status = $_POST['status'];
             $roomIsAvailable = isset($_POST['room_is_available']) ? 1 : 0;
 
-            $stmt = $db->prepare("INSERT INTO rooms (room_number, room_type_id, status, room_is_available) 
+            $stmt = $conn->prepare("INSERT INTO rooms (room_number, room_type_id, status, room_is_available) 
                                   VALUES (:roomNumber, :roomTypeId, :status, :roomIsAvailable)");
-            $stmt->bindValue(':roomNumber', $roomNumber, SQLITE3_TEXT);
-            $stmt->bindValue(':roomTypeId', $roomTypeId, SQLITE3_INTEGER);
-            $stmt->bindValue(':status', $status, SQLITE3_TEXT);
-            $stmt->bindValue(':roomIsAvailable', $roomIsAvailable, SQLITE3_INTEGER);
+            $stmt->bindValue(':roomNumber', $roomNumber, PDO::PARAM_STR);
+            $stmt->bindValue(':roomTypeId', $roomTypeId, PDO::PARAM_INT);
+            $stmt->bindValue(':status', $status, PDO::PARAM_STR);
+            $stmt->bindValue(':roomIsAvailable', $roomIsAvailable, PDO::PARAM_INT);
 
             if ($stmt->execute()) {
-                $feedback = 'Room added successfully!';
+                $feedback = 'Room has been added successfully!';
             } else {
                 $feedback = 'Error adding room.';
             }
-        }
-        elseif ($action === 'edit') {
+        } elseif ($action === 'edit') {
             $roomId = $_POST['room_id'];
             $roomNumber = $_POST['room_number'];
             $roomTypeId = $_POST['room_type_id'];
             $status = $_POST['status'];
             $roomIsAvailable = isset($_POST['room_is_available']) ? 1 : 0;
 
-            $stmt = $db->prepare("UPDATE rooms 
+            $stmt = $conn->prepare("UPDATE rooms 
                                   SET room_number = :roomNumber, 
                                       room_type_id = :roomTypeId, 
                                       status = :status, 
                                       room_is_available = :roomIsAvailable 
                                   WHERE room_id = :roomId");
-            $stmt->bindValue(':roomId', $roomId, SQLITE3_INTEGER);
-            $stmt->bindValue(':roomNumber', $roomNumber, SQLITE3_TEXT);
-            $stmt->bindValue(':roomTypeId', $roomTypeId, SQLITE3_INTEGER);
-            $stmt->bindValue(':status', $status, SQLITE3_TEXT);
-            $stmt->bindValue(':roomIsAvailable', $roomIsAvailable, SQLITE3_INTEGER);
+            $stmt->bindValue(':roomId', $roomId, PDO::PARAM_INT);
+            $stmt->bindValue(':roomNumber', $roomNumber, PDO::PARAM_STR);
+            $stmt->bindValue(':roomTypeId', $roomTypeId, PDO::PARAM_INT);
+            $stmt->bindValue(':status', $status, PDO::PARAM_STR);
+            $stmt->bindValue(':roomIsAvailable', $roomIsAvailable, PDO::PARAM_INT);
 
             if ($stmt->execute()) {
                 $feedback = 'Room updated successfully!';
             } else {
                 $feedback = 'Error updating room.';
             }
-        }
-        elseif ($action === 'delete') {
+        } elseif ($action === 'delete') {
             $roomId = $_POST['room_id'];
 
-            $stmt = $db->prepare("DELETE FROM rooms WHERE room_id = :roomId");
-            $stmt->bindValue(':roomId', $roomId, SQLITE3_INTEGER);
+            $stmt = $conn->prepare("DELETE FROM rooms WHERE room_id = :roomId");
+            $stmt->bindValue(':roomId', $roomId, PDO::PARAM_INT);
 
             if ($stmt->execute()) {
                 $feedback = 'Room deleted successfully!';
@@ -76,14 +72,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$result = $db->query("SELECT r.room_id, r.room_number, r.room_is_available, r.status, rt.room_type_name 
+$stmt = $conn->query("SELECT r.room_id, r.room_number, r.room_is_available, r.status, rt.room_type_name 
                       FROM rooms r 
                       JOIN room_types rt ON r.room_type_id = rt.room_type_id");
-while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
-    $roomData[] = $row;
-}
+$roomData = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-$db->close();
+$conn = null;
 ?>
 
 <!doctype html>

@@ -1,7 +1,7 @@
 <?php
 session_start();
 
-$db = new SQLite3(__DIR__ . '/../luckynest.db');
+include __DIR__ . '/../include/db.php';
 
 $feedback = '';
 $roomTypeData = [];
@@ -10,14 +10,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['action'])) {
         $action = $_POST['action'];
 
-        // Logic for adding, editing, and deleting values in the database
+        // This if elseif elseif is the CRUD Logic
         if ($action === 'add') {
             $roomTypeName = $_POST['room_type_name'];
             $rateMonthly = $_POST['rate_monthly'];
 
-            $stmt = $db->prepare("INSERT INTO room_types (room_type_name, rate_monthly) VALUES (:roomTypeName, :rateMonthly)");
-            $stmt->bindValue(':roomTypeName', $roomTypeName, SQLITE3_TEXT);
-            $stmt->bindValue(':rateMonthly', $rateMonthly, SQLITE3_FLOAT);
+            $stmt = $conn->prepare("INSERT INTO room_types (room_type_name, rate_monthly) VALUES (:roomTypeName, :rateMonthly)");
+            $stmt->bindParam(':roomTypeName', $roomTypeName, PDO::PARAM_STR);
+            $stmt->bindParam(':rateMonthly', $rateMonthly, PDO::PARAM_STR);
 
             if ($stmt->execute()) {
                 $feedback = 'Room type added successfully!';
@@ -29,37 +29,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $roomTypeName = $_POST['room_type_name'];
             $rateMonthly = $_POST['rate_monthly'];
 
-            $stmt = $db->prepare("UPDATE room_types SET room_type_name = :roomTypeName, rate_monthly = :rateMonthly WHERE room_type_id = :id");
-            $stmt->bindValue(':id', $id, SQLITE3_INTEGER);
-            $stmt->bindValue(':roomTypeName', $roomTypeName, SQLITE3_TEXT);
-            $stmt->bindValue(':rateMonthly', $rateMonthly, SQLITE3_FLOAT);
+            $stmt = $conn->prepare("UPDATE room_types SET room_type_name = :roomTypeName, rate_monthly = :rateMonthly WHERE room_type_id = :id");
+            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+            $stmt->bindParam(':roomTypeName', $roomTypeName, PDO::PARAM_STR);
+            $stmt->bindParam(':rateMonthly', $rateMonthly, PDO::PARAM_STR);
 
             if ($stmt->execute()) {
                 $feedback = 'Room type updated successfully!';
             } else {
-                $feedback = 'Error updating room type.';
+                $feedback = 'Error updating thee room type.';
             }
         } elseif ($action === 'delete') {
             $id = $_POST['room_type_id'];
 
-            $stmt = $db->prepare("DELETE FROM room_types WHERE room_type_id = :id");
-            $stmt->bindValue(':id', $id, SQLITE3_INTEGER);
+            $stmt = $conn->prepare("DELETE FROM room_types WHERE room_type_id = :id");
+            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
 
             if ($stmt->execute()) {
                 $feedback = 'Room type deleted successfully!';
             } else {
-                $feedback = 'Error deleting room type.';
+                $feedback = 'Error deleting the room type.';
             }
         }
     }
 }
 
-$result = $db->query("SELECT * FROM room_types");
-while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
+$result = $conn->query("SELECT * FROM room_types");
+while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
     $roomTypeData[] = $row;
 }
 
-$db->close();
+$conn = null;
 ?>
 
 <!doctype html>

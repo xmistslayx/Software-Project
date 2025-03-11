@@ -1,7 +1,7 @@
 <?php
 session_start();
 
-$db = new SQLite3(__DIR__ . '/../luckynest.db');
+include __DIR__ . '/../include/db.php';
 
 $feedback = '';
 $userData = [];
@@ -10,7 +10,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['action'])) {
         $action = $_POST['action'];
 
-        //Editing and Deleting Logic
+        // This if elseif elseif is the CRUD Logic
         if ($action === 'edit') {
             if (isset($_POST['user_id'], $_POST['forename'], $_POST['surname'], $_POST['email'], $_POST['phone'], $_POST['emergency_contact'], $_POST['address'], $_POST['role'])) {
                 $id = $_POST['user_id'];
@@ -22,15 +22,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $address = $_POST['address'];
                 $role = $_POST['role'];
 
-                $stmt = $db->prepare("UPDATE users SET forename = :forename, surname = :surname, email = :email, phone = :phone, emergency_contact = :emergencyContact, address = :address, role = :role WHERE user_id = :id");
-                $stmt->bindValue(':id', $id, SQLITE3_INTEGER);
-                $stmt->bindValue(':forename', $forename, SQLITE3_TEXT);
-                $stmt->bindValue(':surname', $surname, SQLITE3_TEXT);
-                $stmt->bindValue(':email', $email, SQLITE3_TEXT);
-                $stmt->bindValue(':phone', $phone, SQLITE3_TEXT);
-                $stmt->bindValue(':emergencyContact', $emergencyContact, SQLITE3_TEXT);
-                $stmt->bindValue(':address', $address, SQLITE3_TEXT);
-                $stmt->bindValue(':role', $role, SQLITE3_TEXT);
+                $stmt = $conn->prepare("UPDATE users SET forename = :forename, surname = :surname, email = :email, phone = :phone, emergency_contact = :emergencyContact, address = :address, role = :role WHERE user_id = :id");
+                $stmt->bindValue(':id', $id, PDO::PARAM_INT);
+                $stmt->bindValue(':forename', $forename, PDO::PARAM_STR);
+                $stmt->bindValue(':surname', $surname, PDO::PARAM_STR);
+                $stmt->bindValue(':email', $email, PDO::PARAM_STR);
+                $stmt->bindValue(':phone', $phone, PDO::PARAM_STR);
+                $stmt->bindValue(':emergencyContact', $emergencyContact, PDO::PARAM_STR);
+                $stmt->bindValue(':address', $address, PDO::PARAM_STR);
+                $stmt->bindValue(':role', $role, PDO::PARAM_STR);
 
                 if ($stmt->execute()) {
                     $feedback = 'User updated successfully!';
@@ -42,8 +42,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (isset($_POST['user_id'])) {
                 $id = $_POST['user_id'];
 
-                $stmt = $db->prepare("DELETE FROM users WHERE user_id = :id");
-                $stmt->bindValue(':id', $id, SQLITE3_INTEGER);
+                $stmt = $conn->prepare("DELETE FROM users WHERE user_id = :id");
+                $stmt->bindValue(':id', $id, PDO::PARAM_INT);
 
                 if ($stmt->execute()) {
                     $feedback = 'User deleted successfully!';
@@ -57,12 +57,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$result = $db->query("SELECT * FROM users");
-while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
-    $userData[] = $row;
-}
+$stmt = $conn->query("SELECT * FROM users");
+$userData = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-$db->close();
+$conn = null;
 ?>
 
 <!doctype html>

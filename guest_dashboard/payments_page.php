@@ -1,134 +1,163 @@
 <?php
-$db = new SQLite3(__DIR__ . '/../luckynest.db');
+require __DIR__ . "/../vendor/autoload.php";
+require __DIR__ . "/../include/db.php";
 
-// Replace with your actual Stripe secret key)
-$stripe_secret_key = 'sk_test';
+//TODO add auto rollover of secret keys
+$stripe_secret_key = "sk_test";
+\Stripe\Stripe::setApiKey($stripe_secret_key);
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $user_id = $_POST['user_id'];
-    $room_id = $_POST['room_id'];
-    $amount = $_POST['amount'];
-    $stripe_token = $_POST['stripeToken'];
+$guest_id = 1;
 
-    require_once __DIR__ . '/../vendor/autoload.php';
-    \Stripe\Stripe::setApiKey($stripe_secret_key);
+try {
+    $stmt = $conn->prepare("SELECT booking_id, guest_id, room_id, check_in_date, check_out_date 
+                           FROM bookings 
+                           WHERE guest_id = :guest_id 
+                           ANd booking_is_paid = 0");
+    $stmt->bindValue(':guest_id', $guest_id, PDO::PARAM_INT);
+    $stmt->execute();
+    $bookings = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    $roomRates = [];
+    foreach ($bookings as $booking) {
+        $stmt = $conn->prepare("SELECT rt.rate_monthly 
+                               FROM rooms r 
+                               JOIN room_types rt ON r.room_type_id = rt.room_type_id 
+                               WHERE r.room_id = :room_id");
+        $stmt->bindValue(':room_id', $booking['room_id'], PDO::PARAM_INT);
+        $stmt->execute();
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        $roomRates[$booking['room_id']] = $result ? floatval($result['rate_monthly']) : 0;
+    }
+} catch (PDOException $e) {
+    die("Database error: " . $e->getMessage());
+}
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    if (!isset($_POST["payment_type"]) || !isset($_POST["booking_id"]) || empty($_POST["booking_id"])) {
+        die("Payment type and booking ID are required.");
+    }
+
+    $bookingId = $_POST["booking_id"];
+    $paymentType = $_POST["payment_type"];
+    $description = $_POST["description"];
+    $checkInDate = $_POST["check_in_date"];
+    $checkOutDate = $_POST["check_out_date"];
+    $roomId = $_POST["room_id"];
 
     try {
-        $charge = \Stripe\Charge::create([
-            'amount' => $amount * 100,
-            'currency' => 'usd',
-            'source' => $stripe_token,
-            'description' => 'Payment for room booking',
+        $stmt = $conn->prepare("SELECT rt.rate_monthly 
+                               FROM rooms r 
+                               JOIN room_types rt ON r.room_type_id = rt.room_type_id 
+                               WHERE r.room_id = :room_id");
+        $stmt->bindValue(':room_id', $roomId, PDO::PARAM_INT);
+        $stmt->execute();
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        $roomrate = $result ? floatval($result['rate_monthly']) : 0;
+    } catch (PDOException $e) {
+        die("Database error: " . $e->getMessage());
+    }
+
+    $amount = 0;
+    if ($paymentType == 'rent') {
+        $date1 = new DateTime($checkInDate);
+        $date2 = new DateTime($checkOutDate);
+        $interval = $date1->diff($date2);
+        $days = $interval->days;
+        $amount = $roomrate;
+    } else if ($paymentType == 'food') {
+        $amount = 50;
+    } else if ($paymentType == 'laundry') {
+        $amount = 20;
+    }
+
+    try {
+        $amountRounded = round($amount, 2);
+
+        $checkoutSession = \Stripe\Checkout\Session::create([
+            "payment_method_types" => ["card"],
+            "line_items" => [
+                [
+                    "price_data" => [
+                        "currency" => "gbp",
+                        "product_data" => [
+                            "name" => $description,
+                        ],
+                        "unit_amount" => $amountRounded * 100,
+                    ],
+                    "quantity" => 1,
+                ]
+            ],
+            "mode" => "payment",
+            "success_url" => "http://localhost/LuckyNest/guest_dashboard/success.php?session_id={CHECKOUT_SESSION_ID}&booking_id=" . $bookingId . "&payment_type=" . $paymentType,
+            "cancel_url" => "http://localhost/LuckyNest/guest_dashboard/payments_page.php",
         ]);
 
-        $payment_date = date('Y-m-d H:i:s');
-        $stripe_payment_id = $charge->id;
-
-        $stmt = $db->prepare('INSERT INTO payments (user_id, room_id, amount, payment_date, stripe_payment_id) VALUES (:user_id, :room_id, :amount, :payment_date, :stripe_payment_id)');
-        $stmt->bindValue(':user_id', $user_id, SQLITE3_INTEGER);
-        $stmt->bindValue(':room_id', $room_id, SQLITE3_INTEGER);
-        $stmt->bindValue(':amount', $amount, SQLITE3_FLOAT);
-        $stmt->bindValue(':payment_date', $payment_date, SQLITE3_TEXT);
-        $stmt->bindValue(':stripe_payment_id', $stripe_payment_id, SQLITE3_TEXT);
-        $stmt->execute();
-
-        echo "Payment successful!";
-    } catch (\Stripe\Exception\CardException $e) {
-        echo "Payment failed: " . $e->getError()->message;
+        header("Location: " . $checkoutSession->url);
+        exit();
+    } catch (Exception $e) {
+        echo "Error: " . $e->getMessage();
     }
+    exit();
 }
 ?>
 
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../assets/styles.css">
-    <title>Payment Page</title>
+    <title>Checkout</title>
+    <script>
+        // roomRates has to be defined here becuz it depends on php data
+        const roomRates = <?php echo json_encode($roomRates); ?>;
+    </script>
+    <!--do not remove the double slash, scripts.js does not load when there is only a single slash-->
+    <script src="..//assets/scripts.js"></script>
 </head>
 
 <body>
-    <h1>Make a Payment</h1>
-    <form action="" method="POST">
-        <label for="user_id">User ID:</label>
-        <input type="number" id="user_id" name="user_id" required><br><br>
+    <h2>Make a Payment</h2>
+    
+    <?php if (empty($bookings)): ?>
+        <p>No unpaid bookings found for this guest.</p>
+    <?php else: ?>
+        <form action="" method="POST">
+            <label for="booking_selection">Select Booking:</label>
+            <select id="booking_selection" name="booking_id" onchange="updateBookingDetails()" required>
+                <option value="">-- Select a booking --</option>
+                <?php foreach ($bookings as $booking): ?>
+                    <option value="<?php echo $booking['booking_id']; ?>" data-room-id="<?php echo $booking['room_id']; ?>"
+                        data-check-in="<?php echo $booking['check_in_date']; ?>"
+                        data-check-out="<?php echo $booking['check_out_date']; ?>">
+                        Booking #<?php echo $booking['booking_id']; ?>
+                        (<?php echo $booking['check_in_date']; ?> to <?php echo $booking['check_out_date']; ?>)
+                    </option>
+                <?php endforeach; ?>
+            </select><br>
 
-        <label for="room_id">Room ID:</label>
-        <input type="number" id="room_id" name="room_id" required><br><br>
+            <label for="description">Description:</label>
+            <input type="text" name="description" required><br>
 
-        <label for="amount">Amount:</label>
-        <input type="number" id="amount" name="amount" step="0.01" required><br><br>
+            <label for="payment_type">Payment Type:</label>
+            <select id="payment_type" name="payment_type" onchange="calculateAmount()" required>
+                <option value="rent">Rent</option>
+                <option value="food">Food</option>
+                <option value="laundry">Laundry</option>
+            </select><br>
 
-        <label for="stripeToken">Card Details:</label>
-        <div id="card-element">
-        </div>
+            <label for="amount">Amount (£):</label>
+            <input type="number" id="amount" name="amount" readonly><br>
 
-        <div id="card-errors" role="alert"></div><br><br>
+            <input type="hidden" id="check_in_date" name="check_in_date">
+            <input type="hidden" id="check_out_date" name="check_out_date">
+            <input type="hidden" id="user_id" name="user_id" value="<?php echo $guest_id; ?>">
+            <input type="hidden" id="room_id" name="room_id">
+            <input type="hidden" id="payment_type_hidden" name="payment_type">
 
-        <button type="submit">Submit Payment</button>
-    </form>
-
-    <a href="guest_dashboard.php" class="button">Back to Dashboard</a>
-
-    <script src="https://js.stripe.com/v3/"></script>
-    <script>
-        var stripe = Stripe('pk_test'); // Replace this with your actual Stripe publishable key
-        var elements = stripe.elements();
-
-        var style = {
-            base: {
-                color: '#32325d',
-                fontFamily: '"Helvetica Neue", Helvetica, sans-serif',
-                fontSmoothing: 'antialiased',
-                fontSize: '16px',
-                '::placeholder': {
-                    color: '#aab7c4'
-                }
-            },
-            invalid: {
-                color: '#fa755a',
-                iconColor: '#fa755a'
-            }
-        };
-
-        var card = elements.create('card', { style: style });
-        card.mount('#card-element');
-
-        card.on('change', function (event) {
-            var displayError = document.getElementById('card-errors');
-            if (event.error) {
-                displayError.textContent = event.error.message;
-            } else {
-                displayError.textContent = '';
-            }
-        });
-
-        var form = document.querySelector('form');
-        form.addEventListener('submit', function (event) {
-            event.preventDefault();
-
-            stripe.createToken(card).then(function (result) {
-                if (result.error) {
-                    var errorElement = document.getElementById('card-errors');
-                    errorElement.textContent = result.error.message;
-                } else {
-                    stripeTokenHandler(result.token);
-                }
-            });
-        });
-
-        function stripeTokenHandler(token) {
-            var form = document.querySelector('form');
-            var hiddenInput = document.createElement('input');
-            hiddenInput.setAttribute('type', 'hidden');
-            hiddenInput.setAttribute('name', 'stripeToken');
-            hiddenInput.setAttribute('value', token.id);
-            form.appendChild(hiddenInput);
-            form.submit();
-        }
-    </script>
+            <button type="submit">Pay with Stripe</button>
+        </form>
+    <?php endif; ?>
 </body>
 
 </html>

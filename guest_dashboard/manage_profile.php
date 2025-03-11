@@ -1,17 +1,17 @@
 <?php
 session_start();
 
-$db = new SQLite3(__DIR__ . '/../luckynest.db');
+include __DIR__ . '/../include/db.php';
 
 $feedback = '';
 $userData = [];
 
 //$userId = $_SESSION['user_id'];
 $userId = 1;
-$stmt = $db->prepare("SELECT * FROM users WHERE user_id = :userId");
-$stmt->bindValue(':userId', $userId, SQLITE3_INTEGER);
-$result = $stmt->execute();
-$userData = $result->fetchArray(SQLITE3_ASSOC);
+$stmt = $conn->prepare("SELECT * FROM users WHERE user_id = :userId");
+$stmt->bindValue(':userId', $userId, PDO::PARAM_INT);
+$stmt->execute();
+$userData = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['action'])) {
@@ -25,14 +25,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $emergencyContact = filter_input(INPUT_POST, 'emergency_contact', FILTER_SANITIZE_STRING);
             $address = filter_input(INPUT_POST, 'address', FILTER_SANITIZE_STRING);
 
-            $stmt = $db->prepare("UPDATE users SET forename = :forename, surname = :surname, email = :email, phone = :phone, emergency_contact = :emergencyContact, address = :address WHERE user_id = :userId");
-            $stmt->bindValue(':forename', $forename, SQLITE3_TEXT);
-            $stmt->bindValue(':surname', $surname, SQLITE3_TEXT);
-            $stmt->bindValue(':email', $email, SQLITE3_TEXT);
-            $stmt->bindValue(':phone', $phone, SQLITE3_TEXT);
-            $stmt->bindValue(':emergencyContact', $emergencyContact, SQLITE3_TEXT);
-            $stmt->bindValue(':address', $address, SQLITE3_TEXT);
-            $stmt->bindValue(':userId', $userId, SQLITE3_INTEGER);
+            $stmt = $conn->prepare("UPDATE users SET forename = :forename, surname = :surname, email = :email, phone = :phone, emergency_contact = :emergencyContact, address = :address WHERE user_id = :userId");
+            $stmt->bindValue(':forename', $forename, PDO::PARAM_STR);
+            $stmt->bindValue(':surname', $surname, PDO::PARAM_STR);
+            $stmt->bindValue(':email', $email, PDO::PARAM_STR);
+            $stmt->bindValue(':phone', $phone, PDO::PARAM_STR);
+            $stmt->bindValue(':emergencyContact', $emergencyContact, PDO::PARAM_STR);
+            $stmt->bindValue(':address', $address, PDO::PARAM_STR);
+            $stmt->bindValue(':userId', $userId, PDO::PARAM_INT);
 
             if ($stmt->execute()) {
                 $feedback = 'Profile updated successfully!';
@@ -48,9 +48,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($newPassword === $confirmPassword) {
                     $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
 
-                    $stmt = $db->prepare("UPDATE users SET password = :password WHERE user_id = :userId");
-                    $stmt->bindValue(':password', $hashedPassword, SQLITE3_TEXT);
-                    $stmt->bindValue(':userId', $userId, SQLITE3_INTEGER);
+                    $stmt = $conn->prepare("UPDATE users SET password = :password WHERE user_id = :userId");
+                    $stmt->bindValue(':password', $hashedPassword, PDO::PARAM_STR);
+                    $stmt->bindValue(':userId', $userId, PDO::PARAM_INT);
 
                     if ($stmt->execute()) {
                         $feedback = 'Password updated successfully!';
@@ -67,7 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$db->close();
+$conn = null;
 ?>
 
 <!doctype html>
@@ -91,17 +91,23 @@ $db->close();
         <form method="POST" action="manage_profile.php">
             <input type="hidden" name="action" value="update_profile">
             <label for="forename">Forename:</label>
-            <input type="text" id="forename" name="forename" value="<?php echo htmlspecialchars($userData['forename']); ?>" required>
+            <input type="text" id="forename" name="forename"
+                value="<?php echo htmlspecialchars($userData['forename']); ?>" required>
             <label for="surname">Surname:</label>
-            <input type="text" id="surname" name="surname" value="<?php echo htmlspecialchars($userData['surname']); ?>" required>
+            <input type="text" id="surname" name="surname" value="<?php echo htmlspecialchars($userData['surname']); ?>"
+                required>
             <label for="email">Email:</label>
-            <input type="email" id="email" name="email" value="<?php echo htmlspecialchars($userData['email']); ?>" required>
+            <input type="email" id="email" name="email" value="<?php echo htmlspecialchars($userData['email']); ?>"
+                required>
             <label for="phone">Phone:</label>
-            <input type="text" id="phone" name="phone" value="<?php echo htmlspecialchars($userData['phone']); ?>" required>
+            <input type="text" id="phone" name="phone" value="<?php echo htmlspecialchars($userData['phone']); ?>"
+                required>
             <label for="emergency_contact">Emergency Contact:</label>
-            <input type="text" id="emergency_contact" name="emergency_contact" value="<?php echo htmlspecialchars($userData['emergency_contact']); ?>" required>
+            <input type="text" id="emergency_contact" name="emergency_contact"
+                value="<?php echo htmlspecialchars($userData['emergency_contact']); ?>" required>
             <label for="address">Address:</label>
-            <input type="text" id="address" name="address" value="<?php echo htmlspecialchars($userData['address']); ?>" required>
+            <input type="text" id="address" name="address" value="<?php echo htmlspecialchars($userData['address']); ?>"
+                required>
             <button type="submit" class="update-button">Update Profile</button>
         </form>
 

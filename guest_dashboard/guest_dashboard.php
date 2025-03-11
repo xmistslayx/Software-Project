@@ -9,6 +9,9 @@
 <a href="manage_services.php">
     <button>Services Management</button>
 </a>
+<a href="payment_statistics.php">
+    <button>Payment Statistics</button>
+</a>
 <a href="../index.php">
     <button>Back</button>
 </a>

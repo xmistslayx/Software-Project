@@ -1,5 +1,5 @@
 <?php
-$dsn = "sqlite:luckynest.db";
+$dsn = "sqlite:" . __DIR__ . "/luckynest.db";
 try {
     $conn = new PDO($dsn);
     $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
