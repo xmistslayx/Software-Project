@@ -2,7 +2,6 @@
 // TODO Add the following:
 // 1. A search function
 // 2. A filter function
-// 3. Implement pagination
 
 session_start();
 
@@ -12,10 +11,15 @@ if ($_SESSION['role'] == 'guest' || !isset($_SESSION['role'])) {
 }
 
 include __DIR__ . '/../include/db.php';
+include __DIR__ . '/../include/pagination.php';
 
 $feedback = '';
 $roomData = [];
 $roomTypeOptions = [];
+
+$recordsPerPage = 20;
+$page = isset($_GET["page"]) ? (int) $_GET["page"] : 1;
+$offset = ($page - 1) * $recordsPerPage;
 
 $stmt = $conn->query("SELECT room_type_id, room_type_name FROM room_types");
 $roomTypeOptions = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -84,8 +88,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $stmt = $conn->query("SELECT r.room_id, r.room_number, r.room_is_available, r.status, rt.room_type_name 
                       FROM rooms r 
-                      JOIN room_types rt ON r.room_type_id = rt.room_type_id");
+                      JOIN room_types rt ON r.room_type_id = rt.room_type_id
+                      LIMIT $recordsPerPage OFFSET $offset");
 $roomData = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+$totalRecordsQuery = $conn->query("SELECT COUNT(*) As total FROM rooms");
+$totalRecords = $totalRecordsQuery->fetch(PDO::FETCH_ASSOC)['total'];
+$totalPages = ceil($totalRecords / $recordsPerPage);
 
 $conn = null;
 ?>
@@ -196,6 +205,10 @@ $conn = null;
                 <?php endforeach; ?>
             </tbody>
         </table>
+        <?php
+        $url = 'manage_rooms.php';
+        echo generatePagination($page, $totalPages, $url);
+        ?>
         <br>
         <a href="admin_dashboard.php" class="button">Back to Dashboard</a>
     </div>

@@ -2,7 +2,6 @@
 // TODO Add the following:
 // 1. A search function
 // 2. A filter function
-// 3. Implement pagination
 
 session_start();
 
@@ -12,9 +11,14 @@ if ($_SESSION['role'] == 'guest' || !isset($_SESSION['role'])) {
 }
 
 include __DIR__ . '/../include/db.php';
+include __DIR__ . '/../include/pagination.php';
 
 $feedback = '';
 $roomTypeData = [];
+
+$recordsPerPage = 10;
+$page = isset($_GET["page"]) ? (int) $_GET["page"] : 1;
+$offset = ($page - 1) * $recordsPerPage;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['action'])) {
@@ -64,10 +68,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$result = $conn->query("SELECT * FROM room_types");
+$result = $conn->query("SELECT * FROM room_types LIMIT $recordsPerPage OFFSET $offset");
 while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
     $roomTypeData[] = $row;
 }
+
+$totalRecordsQuery = $conn->query("SELECT COUNT(*) As total FROM room_types");
+$totalRecords = $totalRecordsQuery->fetch(PDO::FETCH_ASSOC)['total'];
+$totalPages = ceil($totalRecords / $recordsPerPage);
 
 $conn = null;
 ?>
@@ -90,10 +98,8 @@ $conn = null;
             <p style="color: green;"><?php echo $feedback; ?></p>
         <?php endif; ?>
 
-        <!-- Add Room Type Button -->
         <button onclick="toggleAddForm()" class="update-button">Add Room Type</button>
 
-        <!-- Add Room Type Form -->
         <div id="add-form">
             <h2>Add New Room Type</h2>
             <form method="POST" action="manage_room_types.php">
@@ -106,7 +112,6 @@ $conn = null;
             </form>
         </div>
 
-        <!-- Room Type List -->
         <h2>Room Type List</h2>
         <table border="1">
             <thead>
@@ -126,7 +131,6 @@ $conn = null;
                         <td>
                             <button onclick="toggleEditForm(<?php echo $roomType['room_type_id']; ?>)"
                                 class="update-button">Edit</button>
-                            <!-- Edit Form -->
                             <div id="edit-form-<?php echo $roomType['room_type_id']; ?>" class="edit-form">
                                 <form method="POST" action="manage_room_types.php" style="display:inline;">
                                     <input type="hidden" name="action" value="edit">
@@ -143,7 +147,6 @@ $conn = null;
                                     <button type="submit" class="update-button">Update</button>
                                 </form>
 
-                                <!-- Delete Form -->
                                 <form method="POST" action="manage_room_types.php" style="display:inline;">
                                     <input type="hidden" name="action" value="delete">
                                     <input type="hidden" name="room_type_id"
@@ -157,6 +160,12 @@ $conn = null;
                 <?php endforeach; ?>
             </tbody>
         </table>
+
+        <?php
+        $url = 'manage_room_types.php';
+        echo generatePagination($page, $totalPages, $url);
+        ?>
+
         <br>
         <a href="admin_dashboard.php" class="button">Back to Dashboard</a>
     </div>

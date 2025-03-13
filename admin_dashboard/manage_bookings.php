@@ -2,7 +2,6 @@
 // TODO Add the following:
 // 1. A search function
 // 2. A filter function
-// 3. Implement pagination
 
 session_start();
 
@@ -12,12 +11,17 @@ if ($_SESSION['role'] == 'guest' || !isset($_SESSION['role'])) {
 }
 
 include __DIR__ . '/../include/db.php';
+include __DIR__ . '/../include/pagination.php';
 
 $feedback = '';
 $bookingData = [];
 $guestOptions = [];
 $roomOptions = [];
 $currentDate = date("Y-m-d");
+
+$recordsPerPage = 10;
+$page = isset($_GET["page"]) ? (int) $_GET["page"] : 1;
+$offset = ($page - 1) * $recordsPerPage;
 
 $guestResult = $conn->query("SELECT user_id, forename, surname FROM users WHERE role = 'guest'");
 while ($row = $guestResult->fetch(PDO::FETCH_ASSOC)) {
@@ -223,10 +227,15 @@ $result = $conn->query("SELECT b.*, r.room_number, rt.room_type_name, u.forename
     FROM bookings b
     JOIN rooms r ON b.room_id = r.room_id
     JOIN room_types rt ON r.room_type_id = rt.room_type_id
-    JOIN users u ON b.guest_id = u.user_id");
+    JOIN users u ON b.guest_id = u.user_id
+    LIMIT $recordsPerPage OFFSET $offset");
 while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
     $bookingData[] = $row;
 }
+
+$totalRecordsQuery = $conn->query("SELECT COUNT(*) As total FROM bookings");
+$totalRecords = $totalRecordsQuery->fetch(PDO::FETCH_ASSOC)['total'];
+$totalPages = ceil($totalRecords / $recordsPerPage);
 
 $conn = null;
 ?>
@@ -375,6 +384,12 @@ $conn = null;
 
             </tbody>
         </table>
+
+        <?php
+        $url = 'manage_bookings.php';
+        echo generatePagination($page, $totalPages, $url);
+        ?>
+
         <br>
         <a href="admin_dashboard.php" class="button">Back to Dashboard</a>
     </div>
@@ -391,4 +406,4 @@ $conn = null;
 
 </body>
 
-</html
+</html>

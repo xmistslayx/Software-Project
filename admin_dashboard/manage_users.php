@@ -2,7 +2,6 @@
 // TODO Add the following:
 // 1. A search function
 // 2. A filter function
-// 3. Implement pagination
 
 session_start();
 
@@ -12,9 +11,14 @@ if ($_SESSION['role'] == 'guest' || !isset($_SESSION['role'])) {
 }
 
 include __DIR__ . '/../include/db.php';
+include __DIR__ . '/../include/pagination.php';
 
 $feedback = '';
 $userData = [];
+
+$recordsPerPage = 15;
+$page = isset($_GET["page"]) ? (int) $_GET["page"] : 1;
+$offset = ($page - 1) * $recordsPerPage;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['action'])) {
@@ -67,8 +71,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$stmt = $conn->query("SELECT * FROM users");
+$stmt = $conn->query("SELECT * FROM users LIMIT $recordsPerPage OFFSET $offset");
 $userData = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+$totalRecordsQuery = $conn->query("SELECT COUNT(*) As total FROM users");
+$totalRecords = $totalRecordsQuery->fetch(PDO::FETCH_ASSOC)['total'];
+$totalPages = ceil($totalRecords / $recordsPerPage);
 
 $conn = null;
 ?>
@@ -122,7 +130,7 @@ $conn = null;
                                 class="update-button">Edit</button>
                             <!-- Edit Form -->
                             <div id="edit-form-<?php echo $user['user_id']; ?>" class="edit-form">
-                                <form method="POST" action="manage_guests.php" style="display:inline;">
+                                <form method="POST" action="manage_users.php" style="display:inline;">
                                     <input type="hidden" name="action" value="edit">
                                     <input type="hidden" name="user_id" value="<?php echo $user['user_id']; ?>">
                                     <label for="forename_<?php echo $user['user_id']; ?>">Forename:</label>
@@ -157,7 +165,7 @@ $conn = null;
                                 </form>
 
                                 <!-- Delete Form -->
-                                <form method="POST" action="manage_guests.php" style="display:inline;">
+                                <form method="POST" action="manage_users.php" style="display:inline;">
                                     <input type="hidden" name="action" value="delete">
                                     <input type="hidden" name="user_id" value="<?php echo $user['user_id']; ?>">
                                     <button type="submit" class="update-button"
@@ -169,6 +177,12 @@ $conn = null;
                 <?php endforeach; ?>
             </tbody>
         </table>
+
+        <?php
+        $url = 'manage_users.php';
+        echo generatePagination($page, $totalPages, $url);
+        ?>
+
         <br>
         <a href="admin_dashboard.php" class="button">Back to Dashboard</a>
     </div>
