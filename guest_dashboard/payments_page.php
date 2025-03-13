@@ -2,9 +2,45 @@
 require __DIR__ . "/../vendor/autoload.php";
 require __DIR__ . "/../include/db.php";
 
-//TODO add auto rollover of secret keys
-$stripe_secret_key = "sk_test";
-\Stripe\Stripe::setApiKey($stripe_secret_key);
+$dotenv = Dotenv\Dotenv::createImmutable("C:\xampp\htdocs\luckynest_env_files");
+$dotenv->load();
+
+function getActiveStripeKey($conn)
+{
+    try {
+        $stmt = $conn->prepare("SELECT key_reference, valid_until FROM stripe_keys WHERE is_active = 1 ORDER BY valid_until DESC LIMIt 1");
+        $stmt->execute();
+        $key = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$key || strtotime($key["valid_until"]) < time()) {
+            $stmt = $conn->prepare("SELECT key_id, key_reference FROM stripe_keys WHERE valid_until > NOW() ORDER BY valid_until ASC LIMIt 1");
+            $stmt->execute();
+            $newKey = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($newKey) {
+                $stmt = $conn->prepare("UPDATE stripe_keys SET is_active = 0 WHERE is_active = 1");
+                $stmt->execute();
+
+                $stmt = $conn->prepare("UPDATE stripe_keys SET is_active = 1 WHERE key_id =:key_id");
+                $stmt->bindValue(':key_id', $newKey['key_id'], PDO::PARAM_INT);
+                $stmt->execute();
+
+                return$_ENV[$newKey['key_reference']];
+            } else {
+                return $_ENV["stripe_key_fallback"];
+            }
+        }
+
+        return $_ENV[$key['key_reference']];
+    } catch (PDOException $e) {
+        error_log("Error fetching Stripe key: " . $e->getMessage());
+        return $_ENV["stripe_key_fallback"];
+    }
+}
+
+
+$stripe_key = getActiveStripeKey($conn);
+\Stripe\Stripe::setApiKey($stripe_key);
 
 $guest_id = 1;
 
@@ -118,7 +154,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 <body>
     <h2>Make a Payment</h2>
-    
+
     <?php if (empty($bookings)): ?>
         <p>No unpaid bookings found for this guest.</p>
     <?php else: ?>
