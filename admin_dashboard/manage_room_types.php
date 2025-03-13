@@ -1,5 +1,15 @@
 <?php
+// TODO Add the following:
+// 1. A search function
+// 2. A filter function
+// 3. Implement pagination
+
 session_start();
+
+if ($_SESSION['role'] == 'guest' || !isset($_SESSION['role'])) {
+    header('Location: unauthorized.php');
+    exit();
+}
 
 include __DIR__ . '/../include/db.php';
 

@@ -1,6 +1,11 @@
 <?php
 session_start();
 
+if (!isset($_SESSION['user_id'])) {
+    header('Location: unauthorized.php');
+    exit();
+}
+
 include __DIR__ . '/../include/db.php';
 
 $feedback = '';

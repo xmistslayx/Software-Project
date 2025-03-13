@@ -2,7 +2,8 @@
 session_start();
 
 if (!isset($_SESSION['user_id'])) {
-    die("You must be logged in to view this page.");
+    header('Location: unauthorized.php');
+    exit();
 }
 
 require __DIR__ . "/../include/db.php";
