@@ -152,7 +152,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Checkout</title>
     <script>
-        // roomRates has to be defined here becuz it depends on php data
+        // roomRates has to be defined here because it depends on php data
         const roomRates = <?php echo json_encode($roomRates); ?>;
     </script>
     <!--do not remove the double slash, scripts.js does not load when there is only a single slash-->
@@ -201,6 +201,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <button type="submit">Pay with Stripe</button>
         </form>
     <?php endif; ?>
+    <a href="guest_dashboard.php" class="button">Back to Dashboard</a>
+
 </body>
 
 </html>

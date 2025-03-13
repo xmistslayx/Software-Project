@@ -147,6 +147,8 @@ $laundry_invoices = array_filter($invoices, function ($invoice) {
             </tbody>
         </table>
     <?php endif; ?>
+    <a href="guest_dashboard.php" class="button">Back to Dashboard</a>
+
 </body>
 
 </html>
