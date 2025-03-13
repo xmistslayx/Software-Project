@@ -1,8 +1,18 @@
 <?php
+//TODO have success thingy come from stripe api
+session_start();
+
+if (!isset($_SESSION['user_id'])) {
+    header("Location: unauthorized.php");
+    exit();
+}
+
+$guest_id = $_SESSION["user_id"];
+
 require __DIR__ . "/../vendor/autoload.php";
 require __DIR__ . "/../include/db.php";
 
-$dotenv = Dotenv\Dotenv::createImmutable("C:\xampp\htdocs\luckynest_env_files");
+$dotenv = Dotenv\Dotenv::createImmutable("../");
 $dotenv->load();
 
 function getActiveStripeKey($conn)
@@ -25,7 +35,7 @@ function getActiveStripeKey($conn)
                 $stmt->bindValue(':key_id', $newKey['key_id'], PDO::PARAM_INT);
                 $stmt->execute();
 
-                return$_ENV[$newKey['key_reference']];
+                return $_ENV[$newKey['key_reference']];
             } else {
                 return $_ENV["stripe_key_fallback"];
             }
@@ -38,11 +48,8 @@ function getActiveStripeKey($conn)
     }
 }
 
-
 $stripe_key = getActiveStripeKey($conn);
 \Stripe\Stripe::setApiKey($stripe_key);
-
-$guest_id = 1;
 
 try {
     $stmt = $conn->prepare("SELECT booking_id, guest_id, room_id, check_in_date, check_out_date 
@@ -112,17 +119,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $checkoutSession = \Stripe\Checkout\Session::create([
             "payment_method_types" => ["card"],
             "line_items" => [
-                [
-                    "price_data" => [
-                        "currency" => "gbp",
-                        "product_data" => [
-                            "name" => $description,
+                    [
+                        "price_data" => [
+                            "currency" => "gbp",
+                            "product_data" => [
+                                    "name" => $description,
+                                ],
+                            "unit_amount" => $amountRounded * 100,
                         ],
-                        "unit_amount" => $amountRounded * 100,
-                    ],
-                    "quantity" => 1,
-                ]
-            ],
+                        "quantity" => 1,
+                    ]
+                ],
             "mode" => "payment",
             "success_url" => "http://localhost/LuckyNest/guest_dashboard/success.php?session_id={CHECKOUT_SESSION_ID}&booking_id=" . $bookingId . "&payment_type=" . $paymentType,
             "cancel_url" => "http://localhost/LuckyNest/guest_dashboard/payments_page.php",
