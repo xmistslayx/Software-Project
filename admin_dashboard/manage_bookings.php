@@ -1,20 +1,45 @@
 <?php
+// TODO Add the following:
+// 1. A search function
+// 2. A filter function
+// 3. Implement pagination
+
 session_start();
+
+if ($_SESSION['role'] == 'guest' || !isset($_SESSION['role'])) {
+    header('Location: unauthorized.php');
+    exit();
+}
+
 include __DIR__ . '/../include/db.php';
 
 $feedback = '';
 $bookingData = [];
 $guestOptions = [];
 $roomOptions = [];
+$currentDate = date("Y-m-d");
 
 $guestResult = $conn->query("SELECT user_id, forename, surname FROM users WHERE role = 'guest'");
 while ($row = $guestResult->fetch(PDO::FETCH_ASSOC)) {
     $guestOptions[] = $row;
 }
 
-$roomResult = $conn->query("SELECT r.room_id, r.room_number, rt.room_type_name, rt.rate_monthly
+$roomResult = $conn->query("
+    SELECT r.room_id, r.room_number, rt.room_type_name, rt.rate_monthly,
+        CASE
+            WHEN EXISTS (
+                SELECT 1
+                FROM bookings b
+                WHERE b.room_id = r.room_id
+                AND b.booking_is_cancelled = 0
+                AND '$currentDate' BETWEEN b.check_in_date AND b.check_out_date
+            ) THEN 'occupied'
+            ELSE 'unoccupied'
+        END AS room_status
     FROM rooms r
-    JOIN room_types rt ON r.room_type_id = rt.room_type_id");
+    JOIN room_types rt ON r.room_type_id = rt.room_type_id
+");
+
 while ($row = $roomResult->fetch(PDO::FETCH_ASSOC)) {
     $roomOptions[] = $row;
 }
@@ -119,10 +144,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 $interval = $checkIn->diff($checkOut);
                 $totalDays = $interval->days;
-    
+
                 $isWholeWeeks = ($totalDays % 7 === 0);
                 $isWholeMonths = ($interval->d === 0 && $interval->h === 0 && $interval->i === 0);
-    
+
                 if (!$isWholeWeeks && !$isWholeMonths) {
                     $feedback = 'Error: Bookings must be whole weeks (e.g., 1 week, 2 weeks) or whole months (e.g., 1 month, 2 months).';
                 } else {
@@ -213,6 +238,8 @@ $conn = null;
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../assets/styles.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="../assets/scripts.js"></script>
     <title>Manage Bookings</title>
 </head>
@@ -273,6 +300,7 @@ $conn = null;
                     <th>Total Price</th>
                     <th>Cancelled</th>
                     <th>Paid</th>
+                    <th>Room Available Today</th>
                 </tr>
             </thead>
             <tbody>
@@ -287,6 +315,15 @@ $conn = null;
                         <td><?php echo $booking['total_price']; ?></td>
                         <td><?php echo $booking['booking_is_cancelled'] ? 'Yes' : 'No'; ?></td>
                         <td><?php echo $booking['booking_is_paid'] ? 'Yes' : 'No'; ?></td>
+                        <td><?php $isAvailableToday = true;
+                        foreach ($roomOptions as $room) {
+                            if ($room['room_id'] == $booking['room_id'] && $room['room_status'] === 'occupied') {
+                                $isAvailableToday = false;
+                                break;
+                            }
+                        }
+                        echo $isAvailableToday ? 'Yes' : 'No';
+                        ?></td>
                         <td>
                             <button onclick="toggleEditForm(<?php echo $booking['booking_id']; ?>)"
                                 class="update-button">Edit</button>
@@ -341,6 +378,17 @@ $conn = null;
         <br>
         <a href="admin_dashboard.php" class="button">Back to Dashboard</a>
     </div>
+
+    <!--pass bookedDates data to JS here as it is generated in the PHP-->
+    <script id="booked-dates" type="application/json">
+    <?php echo json_encode(array_map(function ($booking) {
+        return [
+            'start' => $booking['check_in_date'],
+            'end' => $booking['check_out_date']
+        ];
+    }, $bookingData)); ?>
+    </script>
+
 </body>
 
 </html

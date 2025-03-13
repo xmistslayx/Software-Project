@@ -1,3 +1,4 @@
+/*CRUD form styling*/
 #add-form {
     display: none;
     margin-bottom: 20px;
@@ -6,4 +7,15 @@
 .edit-form {
     display: none;
     margin-top: 10px;
+}
+
+/*manage_bookings*/
+.room-occupied {
+    background-color: gray;
+    color: white;
+}
+
+.room-unoccupied {
+    background-color: teal;
+    color: white;
 }

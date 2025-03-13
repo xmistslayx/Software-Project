@@ -35,8 +35,43 @@ function hideAllAddForms() {
     });
 }
 
+// manage_bookings
+document.addEventListener("DOMContentLoaded", function () {
+    const bookedDates = JSON.parse(document.getElementById("booked-dates").textContent);
 
-// payments_page js
+    const allDateInputs = document.querySelectorAll('input[type="date"]');
+
+    allDateInputs.forEach(function (dateInput) {
+        flatpickr(dateInput, {
+            minDate: "today",
+            dateFormat: "Y-m-d",
+            onDayCreate: function (dObj, dStr, fp, dayElem) {
+                const currentDate = dayElem.dateObj;
+
+                let isBooked = bookedDates.some(booking => {
+                    const startDate = new Date(booking.start);
+                    const endDate = new Date(booking.end);
+
+                    startDate.setHours(0, 0, 0, 0);
+                    endDate.setHours(0, 0, 0, 0);
+                    currentDate.setHours(0, 0, 0, 0);
+
+                    return currentDate >= startDate && currentDate <= endDate;
+                });
+
+                if (isBooked) {
+                    dayElem.classList.add("booked-date");
+                    dayElem.style.backgroundColor = "#ffcccc";
+                    dayElem.style.color = "#666";
+                } else {
+                    dayElem.style.backgroundColor = "#ffffff";
+                }
+            }
+        });
+    });
+});
+
+// payments_page
 function updateBookingDetails() {
     const bookingSelect = document.getElementById('booking_selection');
     const selectedOption = bookingSelect.options[bookingSelect.selectedIndex];
