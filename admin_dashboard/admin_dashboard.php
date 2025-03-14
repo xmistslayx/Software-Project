@@ -13,6 +13,6 @@
     <button type="button">Manage Bookings</button>
 </a>
 <a href="../index.php">
-    <button type="button">Back</button>
+    <button type="button">Log Out</button>
 </a>
 </html>

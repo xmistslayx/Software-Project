@@ -13,6 +13,6 @@
     <button>Payment Statistics</button>
 </a>
 <a href="../index.php">
-    <button>Back</button>
+    <button>Log Out</button>
 </a>
 </html>
