@@ -124,6 +124,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             "currency" => "gbp",
                             "product_data" => [
                                     "name" => $description,
+                                    "description" => $description,
                                 ],
                             "unit_amount" => $amountRounded * 100,
                         ],
