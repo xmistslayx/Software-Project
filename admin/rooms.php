@@ -121,7 +121,7 @@ $conn = null;
 
         <div id="add-form">
             <h2>Add New Room</h2>
-            <form method="POST" action="manage_rooms.php">
+            <form method="POST" action="rooms.php">
                 <input type="hidden" name="action" value="add">
                 <label for="room_number">Room Number:</label>
                 <input type="text" id="room_number" name="room_number" required>
@@ -168,7 +168,7 @@ $conn = null;
                         <td>
                             <button onclick="toggleEditForm(<?php echo $room['room_id']; ?>)" class="update-button">Edit</button>
                             <div id="edit-form-<?php echo $room['room_id']; ?>" class="edit-form">
-                                <form method="POST" action="manage_rooms.php" style="display:inline;">
+                                <form method="POST" action="rooms.php" style="display:inline;">
                                     <input type="hidden" name="action" value="edit">
                                     <input type="hidden" name="room_id" value="<?php echo $room['room_id']; ?>">
                                     <label for="room_number_<?php echo $room['room_id']; ?>">Room Number:</label>
@@ -194,7 +194,7 @@ $conn = null;
                                     <button type="submit" class="update-button">Update</button>
                                 </form>
 
-                                <form method="POST" action="manage_rooms.php" style="display:inline;">
+                                <form method="POST" action="rooms.php" style="display:inline;">
                                     <input type="hidden" name="action" value="delete">
                                     <input type="hidden" name="room_id" value="<?php echo $room['room_id']; ?>">
                                     <button type="submit" class="update-button" onclick="return confirm('Are you sure?')">Delete</button>
@@ -206,11 +206,11 @@ $conn = null;
             </tbody>
         </table>
         <?php
-        $url = 'manage_rooms.php';
+        $url = 'rooms.php';
         echo generatePagination($page, $totalPages, $url);
         ?>
         <br>
-        <a href="admin_dashboard.php" class="button">Back to Dashboard</a>
+        <a href="/dashboard.php" class="button">Back to Dashboard</a>
     </div>
 </body>
 

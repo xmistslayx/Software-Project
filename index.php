@@ -15,9 +15,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $_SESSION['user_id'] = $user['user_id'];
         $_SESSION['role'] = $user['role'];
         if ($user['role'] === 'owner' || $user['role'] === 'admin') {
-            header('Location: admin_dashboard/admin_dashboard.php');
+            header('Location: admin/dashboard.php');
         } else {
-            header('Location: guest_dashboard/guest_dashboard.php');
+            header('Location: guest/dashboard.php');
         }
         exit();
     } else {

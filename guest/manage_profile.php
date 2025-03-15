@@ -129,7 +129,7 @@ $conn = null;
         </form>
 
         <br>
-        <a href="guest_dashboard.php" class="button">Back to Dashboard</a>
+        <a href="dashboard.php" class="button">Back to Dashboard</a>
     </div>
 </body>
 

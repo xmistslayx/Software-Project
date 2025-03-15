@@ -102,7 +102,7 @@ $conn = null;
 
         <div id="add-form">
             <h2>Add New Room Type</h2>
-            <form method="POST" action="manage_room_types.php">
+            <form method="POST" action="room_types.php">
                 <input type="hidden" name="action" value="add">
                 <label for="room_type_name">Room Type Name:</label>
                 <input type="text" id="room_type_name" name="room_type_name" required>
@@ -132,7 +132,7 @@ $conn = null;
                             <button onclick="toggleEditForm(<?php echo $roomType['room_type_id']; ?>)"
                                 class="update-button">Edit</button>
                             <div id="edit-form-<?php echo $roomType['room_type_id']; ?>" class="edit-form">
-                                <form method="POST" action="manage_room_types.php" style="display:inline;">
+                                <form method="POST" action="room_types.php" style="display:inline;">
                                     <input type="hidden" name="action" value="edit">
                                     <input type="hidden" name="room_type_id"
                                         value="<?php echo $roomType['room_type_id']; ?>">
@@ -147,7 +147,7 @@ $conn = null;
                                     <button type="submit" class="update-button">Update</button>
                                 </form>
 
-                                <form method="POST" action="manage_room_types.php" style="display:inline;">
+                                <form method="POST" action="room_types.php" style="display:inline;">
                                     <input type="hidden" name="action" value="delete">
                                     <input type="hidden" name="room_type_id"
                                         value="<?php echo $roomType['room_type_id']; ?>">
@@ -162,12 +162,12 @@ $conn = null;
         </table>
 
         <?php
-        $url = 'manage_room_types.php';
+        $url = 'room_types.php';
         echo generatePagination($page, $totalPages, $url);
         ?>
 
         <br>
-        <a href="admin_dashboard.php" class="button">Back to Dashboard</a>
+        <a href="dashboard.php" class="button">Back to Dashboard</a>
     </div>
 </body>
 

@@ -264,7 +264,7 @@ $conn = null;
 
         <div id="add-form">
             <h2>Add New Booking</h2>
-            <form method="POST" action="manage_bookings.php">
+            <form method="POST" action="bookings.php">
                 <input type="hidden" name="action" value="add">
                 <label for="room_id">Room:</label>
                 <select id="room_id" name="room_id" required>
@@ -337,7 +337,7 @@ $conn = null;
                             <button onclick="toggleEditForm(<?php echo $booking['booking_id']; ?>)"
                                 class="update-button">Edit</button>
                             <div id="edit-form-<?php echo $booking['booking_id']; ?>" class="edit-form">
-                                <form method="POST" action="manage_bookings.php" style="display:inline;">
+                                <form method="POST" action="bookings.php" style="display:inline;">
                                     <input type="hidden" name="action" value="edit">
                                     <input type="hidden" name="booking_id" value="<?php echo $booking['booking_id']; ?>">
                                     <input type="hidden" name="guest_id" value="<?php echo $booking['guest_id']; ?>">
@@ -371,7 +371,7 @@ $conn = null;
                                     <button type="submit" class="update-button">Update</button>
                                 </form>
 
-                                <form method="POST" action="manage_bookings.php" style="display:inline;">
+                                <form method="POST" action="bookings.php" style="display:inline;">
                                     <input type="hidden" name="action" value="delete">
                                     <input type="hidden" name="booking_id" value="<?php echo $booking['booking_id']; ?>">
                                     <button type="submit" class="update-button"
@@ -386,12 +386,12 @@ $conn = null;
         </table>
 
         <?php
-        $url = 'manage_bookings.php';
+        $url = 'bookings.php';
         echo generatePagination($page, $totalPages, $url);
         ?>
 
         <br>
-        <a href="admin_dashboard.php" class="button">Back to Dashboard</a>
+        <a href="dashboard.php" class="button">Back to Dashboard</a>
     </div>
 
     <!--pass bookedDates data to JS here as it is generated in the PHP-->

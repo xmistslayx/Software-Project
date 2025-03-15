@@ -130,7 +130,7 @@ $conn = null;
                                 class="update-button">Edit</button>
                             <!-- Edit Form -->
                             <div id="edit-form-<?php echo $user['user_id']; ?>" class="edit-form">
-                                <form method="POST" action="manage_users.php" style="display:inline;">
+                                <form method="POST" action="user_management.php" style="display:inline;">
                                     <input type="hidden" name="action" value="edit">
                                     <input type="hidden" name="user_id" value="<?php echo $user['user_id']; ?>">
                                     <label for="forename_<?php echo $user['user_id']; ?>">Forename:</label>
@@ -165,7 +165,7 @@ $conn = null;
                                 </form>
 
                                 <!-- Delete Form -->
-                                <form method="POST" action="manage_users.php" style="display:inline;">
+                                <form method="POST" action="user_management.php" style="display:inline;">
                                     <input type="hidden" name="action" value="delete">
                                     <input type="hidden" name="user_id" value="<?php echo $user['user_id']; ?>">
                                     <button type="submit" class="update-button"
@@ -179,12 +179,12 @@ $conn = null;
         </table>
 
         <?php
-        $url = 'manage_users.php';
+        $url = 'user_management.php';
         echo generatePagination($page, $totalPages, $url);
         ?>
 
         <br>
-        <a href="admin_dashboard.php" class="button">Back to Dashboard</a>
+        <a href="dashboard.php" class="button">Back to Dashboard</a>
     </div>
 </body>
 
